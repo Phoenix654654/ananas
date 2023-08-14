@@ -116,6 +116,15 @@ DATABASES = {
     }
 }
 
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/1",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -162,3 +171,6 @@ STRIPE_WEBHOOK_SECRET = 'whsec_e973b082e326b40e2ab7054af70db40340f4f179b0aebb1b6
 #front-end URL's
 CHECKOUT_SUCCESS_URL = 'http://localhost:3000/checkout/success/'
 CHECKOUT_FAILED_URL = 'http://localhost:3000/checkout/failed/'
+
+REDIS_HOST = 'localhost'
+REDIS_PORT = 6379

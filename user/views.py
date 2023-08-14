@@ -1,5 +1,6 @@
 import random
 
+from django.core.cache import cache
 from django.db.models import Count, Avg
 from django.http import Http404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -113,11 +114,19 @@ class VendorProfileAPIView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get_object(self, token):
-        try:
-            user = decode_auth_token(token)
-            return Vendor.objects.get(id=user['user_id'])
-        except Vendor.DoesNotExist:
-            raise Http404
+        user = cache.get(token)
+        if user:
+            print('data from cache')
+            return user
+        else:
+            try:
+                user_data = decode_auth_token(token)
+                user = Vendor.objects.get(id=user_data['user_id'])
+                cache.set(token, user)
+                print('data from db')
+                return user
+            except Vendor.DoesNotExist:
+                raise Http404
 
     def get(self, request, token):
         snippet = self.get_object(token)
@@ -133,11 +142,13 @@ class VendorProfileAPIView(APIView):
         serializer = VendorRegisterSerializer(snippet, data=request.data)
         if serializer.is_valid():
             serializer.save()
+            cache.set(token, serializer.instance)
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, token):
         snippet = self.get_object(token)
+        cache.delete(token)
         snippet.delete()
         return Response(status.HTTP_204_NO_CONTENT)
 
